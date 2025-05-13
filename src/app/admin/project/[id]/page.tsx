@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import useRequireAuth from '@/hooks/useRequireAuth';
 
 export default function AdminProjectDetails() {
-  const { id } = useParams();
+  useRequireAuth(); // 👈 This enforces the check
+
+    const { id } = useParams();
   const router = useRouter();
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);

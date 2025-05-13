@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import useRequireAuth from '@/hooks/useRequireAuth';
 import { supabase } from '@/utils/supabase/client';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
+  useRequireAuth();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

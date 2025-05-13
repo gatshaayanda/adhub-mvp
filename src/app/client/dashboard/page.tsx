@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import Link from 'next/link';
+import useRequireAuth from '@/hooks/useRequireAuth';
 
 export default function ClientDashboard() {
+  useRequireAuth(); // 👈 This enforces the check
+
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
