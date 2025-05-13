@@ -33,8 +33,9 @@ export default function CallbackPage() {
         return;
       }
 
+      // ✅ Redirect based on role
       if (profile.role === 'Admin') {
-        router.push('/admin/create-project');
+        router.push('/admin/dashboard');
       } else if (profile.role === 'Client') {
         router.push('/client/dashboard');
       } else {

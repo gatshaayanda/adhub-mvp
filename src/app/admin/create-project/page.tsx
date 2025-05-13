@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
+import useRequireAuth from '@/hooks/useRequireAuth';
+
 
 export default function CreateProjectPage() {
+useRequireAuth(); // 👈 This enforces the check
+
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [business, setBusiness] = useState('');
