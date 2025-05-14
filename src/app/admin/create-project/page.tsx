@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import useRequireAuth from '@/hooks/useRequireAuth';
 
-
 export default function CreateProjectPage() {
-useRequireAuth(); // 👈 This enforces the check
+  useRequireAuth();
 
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -21,11 +20,12 @@ useRequireAuth(); // 👈 This enforces the check
   const [designPrefs, setDesignPrefs] = useState('');
   const [examples, setExamples] = useState('');
   const [mood, setMood] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [progressUpdate, setProgressUpdate] = useState('');
   const [message, setMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value, type, checked } = target;
+    const { name, value } = e.target;
 
     switch (name) {
       case 'client_name':
@@ -55,9 +55,6 @@ useRequireAuth(); // 👈 This enforces the check
       case 'features':
         setFeatures(value);
         break;
-      case 'admin_panel':
-        setAdminPanel(type === 'checkbox' ? checked : false);
-        break;
       case 'design_prefs':
         setDesignPrefs(value);
         break;
@@ -67,7 +64,19 @@ useRequireAuth(); // 👈 This enforces the check
       case 'mood':
         setMood(value);
         break;
+      case 'admin_notes':
+        setAdminNotes(value);
+        break;
+      case 'progress_update':
+        setProgressUpdate(value);
+        break;
+      default:
+        break;
     }
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAdminPanel(e.target.checked);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,13 +109,11 @@ useRequireAuth(); // 👈 This enforces the check
       design_prefs: designPrefs,
       examples,
       mood,
+      admin_notes: adminNotes,
+      progress_update: progressUpdate,
     });
 
-    if (error) {
-      setMessage(`❌ Error: ${error.message}`);
-    } else {
-      setMessage('✅ Project submitted and linked to client!');
-    }
+    setMessage(error ? `❌ Error: ${error.message}` : '✅ Project submitted and linked to client!');
   };
 
   return (
@@ -123,12 +130,14 @@ useRequireAuth(); // 👈 This enforces the check
         <textarea name="content" placeholder="Content" value={content} onChange={handleChange} className="w-full border px-3 py-2" />
         <textarea name="features" placeholder="Features" value={features} onChange={handleChange} className="w-full border px-3 py-2" />
         <label className="block">
-          <input type="checkbox" name="admin_panel" checked={adminPanel} onChange={handleChange} className="mr-2" />
+          <input type="checkbox" name="admin_panel" checked={adminPanel} onChange={handleCheckboxChange} className="mr-2" />
           Client wants access to admin panel
         </label>
         <textarea name="design_prefs" placeholder="Design Preferences" value={designPrefs} onChange={handleChange} className="w-full border px-3 py-2" />
         <textarea name="examples" placeholder="Examples / Inspiration" value={examples} onChange={handleChange} className="w-full border px-3 py-2" />
         <textarea name="mood" placeholder="Mood / Branding" value={mood} onChange={handleChange} className="w-full border px-3 py-2" />
+        <textarea name="admin_notes" placeholder="Admin Notes (Internal Only)" value={adminNotes} onChange={handleChange} className="w-full border px-3 py-2 bg-gray-100" />
+        <textarea name="progress_update" placeholder="Progress Update (Client will see this)" value={progressUpdate} onChange={handleChange} className="w-full border px-3 py-2" />
         <button type="submit" className="w-full bg-blue-600 text-white py-2">
           Submit Project
         </button>

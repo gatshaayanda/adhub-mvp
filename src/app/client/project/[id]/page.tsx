@@ -6,23 +6,28 @@ import { supabase } from '@/utils/supabase/client';
 import useRequireAuth from '@/hooks/useRequireAuth';
 
 export default function ClientProjectDetails() {
-  useRequireAuth(); // 👈 This enforces the check
+  useRequireAuth(); // 🔒 Redirects if not logged in
 
-    const { id } = useParams();
+  const { id } = useParams();
   const router = useRouter();
   const [project, setProject] = useState<any>(null);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchProject = async () => {
+      if (!id || typeof id !== 'string') {
+        setError('Invalid project ID.');
+        return;
+      }
+
       const {
         data: { user },
-        error: userError,
+        error: authError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        setError('Not authenticated');
+      if (authError || !user) {
+        setError('You must be logged in to view this project.');
         router.push('/login');
         return;
       }
@@ -31,11 +36,11 @@ export default function ClientProjectDetails() {
         .from('projects')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id) // Protects access to own project only
+        .eq('user_id', user.id)
         .single();
 
       if (error || !data) {
-        setError('Project not found or access denied');
+        setError('Project not found or you are not authorized.');
       } else {
         setProject(data);
       }
@@ -46,13 +51,22 @@ export default function ClientProjectDetails() {
     fetchProject();
   }, [id, router]);
 
-  if (loading) return <p className="text-center mt-10">Loading project details...</p>;
+  if (loading) return <p className="text-center mt-10">Loading project...</p>;
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
 
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
-      <h1 className="text-2xl font-bold mb-6">Project Details</h1>
-      <div className="border p-4 rounded shadow space-y-2">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Project Details</h1>
+        <button
+          onClick={() => router.push('/client/dashboard')}
+          className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+
+      <div className="border p-4 rounded shadow space-y-2 bg-white">
         <p><strong>Client:</strong> {project.client_name}</p>
         <p><strong>Email:</strong> {project.client_email}</p>
         <p><strong>Business:</strong> {project.business}</p>
@@ -66,6 +80,7 @@ export default function ClientProjectDetails() {
         <p><strong>Examples:</strong> {project.examples}</p>
         <p><strong>Mood:</strong> {project.mood}</p>
         <p><strong>Admin Panel:</strong> {project.admin_panel ? 'Yes' : 'No'}</p>
+        <p><strong>Progress Update:</strong> {project.progress_update || '—'}</p>
       </div>
     </div>
   );
