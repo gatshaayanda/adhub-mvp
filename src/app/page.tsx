@@ -1,103 +1,149 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  const keys = useRef<string[]>([]);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+  // Keyboard “admin” detector
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      keys.current.push(e.key.toLowerCase());
+      if (keys.current.length > 5) keys.current.shift();
+      if (keys.current.join("").includes("admin")) {
+        router.push("/login");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+
+  // Long-press helper for mobile
+  const longPress = {
+    onTouchStart: () => setTouchStart(Date.now()),
+    onTouchEnd: () => {
+      if (touchStart && Date.now() - touchStart > 600) {
+        router.push("/login");
+      }
+      setTouchStart(null);
+    },
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#0B1A33]">
+      {/* NAV */}
+      <header className="w-full px-6 py-4 flex items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-2 select-none"
+          {...longPress}
+        >
+          <Image
+            src="/logo-mark.svg"
+            alt="AdminHub"
+            width={32}
+            height={32}
+            priority
+          />
+          <span className="font-bold tracking-tight text-lg">AdminHub</span>
+        </Link>
+        <nav className="hidden sm:flex gap-6 font-medium">
+          <Link href="#services" className="hover:text-[#C5A100]">
+            Services
+          </Link>
+          <Link href="#about" className="hover:text-[#C5A100]">
+            About
+          </Link>
+          <Link href="#contact" className="hover:text-[#C5A100]">
+            Contact
+          </Link>
+        </nav>
+      </header>
+
+      {/* HERO */}
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-6">
+        <h1 className="text-4xl sm:text-5xl font-bold leading-tight max-w-3xl">
+          We’ve got you,
+          <br className="hidden sm:block" />
+          No hype, no noise.
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-[#4F5F7A]">
+          Just smart, smooth digital execution you can trust.
+        </p>
+        <Link
+          href="#contact"
+          className="mt-8 inline-block bg-[#C5A100] text-white rounded-full px-7 py-3 font-semibold hover:opacity-90 transition"
+        >
+          Get Started
+        </Link>
+      </section>
+
+      {/* SERVICES */}
+      <section id="services" className="py-16 bg-white">
+        <div className="max-w-5xl mx-auto px-6 grid gap-10 text-center md:grid-cols-3">
+          {[
+            {
+              title: "Design & Build",
+              body: "Modern, performant sites & PWAs built with Next.js.",
+            },
+            {
+              title: "Care Plans",
+              body: "Security, updates & content tweaks – month after month.",
+            },
+            {
+              title: "Scale & Evolve",
+              body: "Add features or redesign when your business grows.",
+            },
+          ].map(({ title, body }) => (
+            <div key={title}>
+              <h3 className="text-xl font-semibold mb-2">{title}</h3>
+              <p className="text-sm text-[#4F5F7A]">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section id="about" className="py-16 bg-[#F1F1F1]">
+        <div className="max-w-4xl mx-auto px-6 text-center space-y-6">
+          <h2 className="text-2xl font-bold">Your Digital Partner</h2>
+          <p className="text-[#4F5F7A] leading-relaxed">
+            Based in Botswana, AdminHub plugs straight into your workflow –
+            guiding you from idea to live launch. Whether you need a brand-new
+            site, a progressive web app, or ongoing maintenance, we keep things
+            simple and results-driven.
+          </p>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" className="py-16 bg-white">
+        <div className="max-w-xl mx-auto px-6 text-center">
+          <h2 className="text-2xl font-bold mb-4">Ready to chat?</h2>
+          <p className="text-[#4F5F7A] mb-8">
+            Drop your details and we’ll send a quick questionnaire to kick-off.
+          </p>
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:hello@adminhub.co.bw"
+            className="inline-block bg-[#0B1A33] text-white rounded-full px-7 py-3 font-semibold hover:opacity-90 transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+            Email Us
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-6 text-center text-xs text-[#4F5F7A]">
+        © {new Date().getFullYear()} AdminHub • From idea → launch
+        <Link href="/login" className="sr-only">
+          Admin Login
+        </Link>
       </footer>
-    </div>
+    </main>
   );
 }
