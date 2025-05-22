@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import Link from 'next/link';
 import { LayoutDashboard, LogOut, Briefcase, ArrowRight } from 'lucide-react';
+import AdminHubLoader from '@/components/AdminHubLoader';
+
 
 interface Project {
   id: string;
@@ -59,7 +61,7 @@ export default function ClientDashboard() {
   };
 
   if (loading)
-    return <p className="text-center mt-10 text-lg text-gray-500">Loading your projects...</p>;
+ return <AdminHubLoader />;
   if (error)
     return <p className="text-center mt-10 text-red-500">{error}</p>;
   if (projects.length === 0)

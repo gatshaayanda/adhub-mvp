@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import AdminHubLoader from '@/components/AdminHubLoader';
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -50,5 +51,5 @@ export default function CallbackPage() {
     return <p className="text-red-500 text-center mt-10">{error}</p>;
   }
 
-  return <p className="text-center mt-10">Finishing login...</p>;
+   return <AdminHubLoader />;
 }

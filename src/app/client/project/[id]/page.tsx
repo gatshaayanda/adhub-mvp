@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import useRequireAuth from '@/hooks/useRequireAuth';
+import AdminHubLoader from '@/components/AdminHubLoader';
 
 interface Project {
   id: string;
@@ -70,7 +71,7 @@ export default function ClientProjectDetails() {
     fetchProject();
   }, [id, router]);
 
-  if (loading) return <p className="text-center mt-10">Loading project...</p>;
+  if (loading)  return <AdminHubLoader />;
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
   if (!project) return null; // <--- THIS fixes your TS errors!
 
