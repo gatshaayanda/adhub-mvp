@@ -8,6 +8,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
+  // Get site URL from environment, fallback to localhost
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
@@ -15,7 +19,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'http://localhost:3000/auth/callback',
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
