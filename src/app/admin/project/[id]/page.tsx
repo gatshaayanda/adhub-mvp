@@ -3,16 +3,22 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
+import { ArrowLeft, Trash2, Save } from 'lucide-react';
 
 interface Project {
   id: string;
   client_name: string;
-  business_name: string;
+  client_email: string;
+  business: string;
   industry: string;
+  goals: string;
+  painpoints: string;
+  pages: string;
   content: string;
-  functionality: string;
-  design_preferences: string;
-  competitor_sites: string;
+  features: string;
+  admin_panel: boolean;
+  design_prefs: string;
+  examples: string;
   mood: string;
   admin_notes: string;
   progress_update: string;
@@ -30,6 +36,7 @@ export default function AdminProjectEditPage({ params }: Props) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -40,7 +47,7 @@ export default function AdminProjectEditPage({ params }: Props) {
         .single();
 
       if (error) {
-        console.error('Error fetching project:', error.message);
+        setMessage('Error fetching project.');
       } else {
         setProject(data);
       }
@@ -49,16 +56,20 @@ export default function AdminProjectEditPage({ params }: Props) {
     fetchProject();
   }, [projectId]);
 
-  const handleChange = (field: keyof Project, value: string) => {
+  const handleChange = (field: keyof Project, value: string | boolean) => {
     if (project) {
       setProject({ ...project, [field]: value });
+      setSuccess(false);
+      setMessage('');
     }
   };
 
   const handleSave = async () => {
     if (!project) return;
-
     setLoading(true);
+    setMessage('');
+    setSuccess(false);
+
     const { error } = await supabase
       .from('projects')
       .update(project)
@@ -67,10 +78,11 @@ export default function AdminProjectEditPage({ params }: Props) {
     setLoading(false);
 
     if (error) {
-      console.error('Update error:', error.message);
-      setMessage('Failed to update project.');
+      setMessage('❌ Failed to update project.');
+      setSuccess(false);
     } else {
-      setMessage('Project updated successfully.');
+      setMessage('✅ Project updated successfully.');
+      setSuccess(true);
     }
   };
 
@@ -81,61 +93,92 @@ export default function AdminProjectEditPage({ params }: Props) {
     const { error } = await supabase.from('projects').delete().eq('id', projectId);
 
     if (error) {
-      console.error('Failed to delete project:', error.message);
-      alert('Delete failed. Try again.');
+      alert('❌ Delete failed. Try again.');
     } else {
       alert('Project deleted.');
       router.push('/admin/dashboard');
     }
   };
 
-  if (!project) return <p>Loading project...</p>;
+  if (!project)
+    return <p className="text-center mt-16 text-lg text-gray-500">Loading project...</p>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Edit Project</h1>
-
-      {message && <p className="mb-4 text-green-600">{message}</p>}
-
-      <div className="space-y-4">
-        <Input label="Client Name" value={project.client_name} onChange={(val) => handleChange('client_name', val)} />
-        <Input label="Business Name" value={project.business_name} onChange={(val) => handleChange('business_name', val)} />
-        <Input label="Industry" value={project.industry} onChange={(val) => handleChange('industry', val)} />
-        <Input label="Content" value={project.content} onChange={(val) => handleChange('content', val)} />
-        <Input label="Functionality" value={project.functionality} onChange={(val) => handleChange('functionality', val)} />
-        <Input label="Design Preferences" value={project.design_preferences} onChange={(val) => handleChange('design_preferences', val)} />
-        <Input label="Competitor Sites" value={project.competitor_sites} onChange={(val) => handleChange('competitor_sites', val)} />
-        <Input label="Mood/Branding" value={project.mood} onChange={(val) => handleChange('mood', val)} />
-        <Input label="Admin Notes (Internal)" value={project.admin_notes} onChange={(val) => handleChange('admin_notes', val)} />
-        <Input label="Progress Update (Client Visible)" value={project.progress_update} onChange={(val) => handleChange('progress_update', val)} />
-      </div>
-
-      {/* ✅ BACK BUTTON ADDED HERE */}
-      <div className="mt-6">
+    <div className="max-w-2xl mx-auto mt-12 px-4">
+      <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => router.push('/admin/dashboard')}
-          className="bg-gray-200 text-sm px-4 py-2 rounded hover:bg-gray-300"
+          className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200"
         >
-          ← Back to Dashboard
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
+        <h1 className="text-2xl font-bold text-gray-800 ml-3">Edit Project</h1>
       </div>
 
-      <div className="mt-4 flex gap-4">
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? 'Saving...' : 'Save Changes'}
-        </button>
+      {message && (
+        <div className={`mb-4 px-4 py-3 rounded-xl text-center font-semibold 
+          ${success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {message}
+        </div>
+      )}
 
-        <button
-          onClick={handleDelete}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Delete Project
-        </button>
-      </div>
+      <form
+        onSubmit={e => { e.preventDefault(); handleSave(); }}
+        className="bg-white p-8 rounded-2xl shadow-2xl border border-blue-100 space-y-4"
+      >
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Client Name" value={project.client_name} onChange={val => handleChange('client_name', val)} />
+          <Input label="Client Email" value={project.client_email} onChange={val => handleChange('client_email', val)} />
+          <Input label="Business" value={project.business} onChange={val => handleChange('business', val)} />
+          <Input label="Industry" value={project.industry} onChange={val => handleChange('industry', val)} />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Goals" value={project.goals} onChange={val => handleChange('goals', val)} />
+          <Input label="Pain Points" value={project.painpoints} onChange={val => handleChange('painpoints', val)} />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Pages" value={project.pages} onChange={val => handleChange('pages', val)} />
+          <Input label="Content" value={project.content} onChange={val => handleChange('content', val)} />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Features" value={project.features} onChange={val => handleChange('features', val)} />
+          <Input label="Design Preferences" value={project.design_prefs} onChange={val => handleChange('design_prefs', val)} />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Examples / Competitor Sites" value={project.examples} onChange={val => handleChange('examples', val)} />
+          <Input label="Mood / Branding" value={project.mood} onChange={val => handleChange('mood', val)} />
+        </div>
+        <div className="flex items-center mb-2">
+          <input
+            type="checkbox"
+            name="admin_panel"
+            checked={project.admin_panel}
+            onChange={e => handleChange('admin_panel', e.target.checked)}
+            className="mr-2 rounded border-gray-300"
+          />
+          <span className="text-gray-700">Client wants access to admin panel</span>
+        </div>
+        <Input label="Admin Notes (Internal Only)" value={project.admin_notes} onChange={val => handleChange('admin_notes', val)} />
+        <Input label="Progress Update (Client will see this)" value={project.progress_update} onChange={val => handleChange('progress_update', val)} />
+
+        <div className="flex gap-4 mt-8">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-blue-700 transition"
+          >
+            <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="flex items-center gap-2 bg-red-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-red-700 transition"
+          >
+            <Trash2 className="w-5 h-5" /> Delete Project
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -151,11 +194,11 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block font-semibold mb-1">{label}</label>
+      <label className="block font-semibold mb-1 text-gray-700">{label}</label>
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded"
+        onChange={e => onChange(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-xl focus:ring-2 ring-blue-300 min-h-[44px] transition"
         rows={2}
       />
     </div>

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { ShieldCheck } from "lucide-react"; // ICON import here
 
 export default function Home() {
   const router = useRouter();
@@ -43,13 +43,7 @@ export default function Home() {
           className="flex items-center gap-2 select-none"
           {...longPress}
         >
-          <Image
-            src="/logo-mark.svg"
-            alt="AdminHub"
-            width={32}
-            height={32}
-            priority
-          />
+          <ShieldCheck size={32} className="text-[#C5A100]" />  {/* ICON HERE */}
           <span className="font-bold tracking-tight text-lg">AdminHub</span>
         </Link>
         <nav className="hidden sm:flex gap-6 font-medium">

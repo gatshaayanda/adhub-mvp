@@ -5,12 +5,29 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import useRequireAuth from '@/hooks/useRequireAuth';
 
+interface Project {
+  id: string;
+  client_name: string;
+  business: string;
+  industry: string;
+  goals: string;
+  painpoints: string;
+  pages: string;
+  content: string;
+  features: string;
+  admin_panel: boolean;
+  design_prefs: string;
+  examples: string;
+  mood: string;
+  progress_update: string;
+}
+
 export default function ClientProjectDetails() {
-  useRequireAuth(); // 🔒 Redirects if not logged in
+  useRequireAuth();
 
   const { id } = useParams();
   const router = useRouter();
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -18,6 +35,7 @@ export default function ClientProjectDetails() {
     const fetchProject = async () => {
       if (!id || typeof id !== 'string') {
         setError('Invalid project ID.');
+        setLoading(false);
         return;
       }
 
@@ -28,6 +46,7 @@ export default function ClientProjectDetails() {
 
       if (authError || !user) {
         setError('You must be logged in to view this project.');
+        setLoading(false);
         router.push('/login');
         return;
       }
@@ -53,6 +72,7 @@ export default function ClientProjectDetails() {
 
   if (loading) return <p className="text-center mt-10">Loading project...</p>;
   if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
+  if (!project) return null; // <--- THIS fixes your TS errors!
 
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
@@ -65,23 +85,34 @@ export default function ClientProjectDetails() {
           ← Back to Dashboard
         </button>
       </div>
-
       <div className="border p-4 rounded shadow space-y-2 bg-white">
-        <p><strong>Client:</strong> {project.client_name}</p>
-        <p><strong>Email:</strong> {project.client_email}</p>
-        <p><strong>Business:</strong> {project.business}</p>
-        <p><strong>Industry:</strong> {project.industry}</p>
-        <p><strong>Goals:</strong> {project.goals}</p>
-        <p><strong>Pain Points:</strong> {project.painpoints}</p>
-        <p><strong>Pages:</strong> {project.pages}</p>
-        <p><strong>Content:</strong> {project.content}</p>
-        <p><strong>Features:</strong> {project.features}</p>
-        <p><strong>Design Prefs:</strong> {project.design_prefs}</p>
-        <p><strong>Examples:</strong> {project.examples}</p>
-        <p><strong>Mood:</strong> {project.mood}</p>
-        <p><strong>Admin Panel:</strong> {project.admin_panel ? 'Yes' : 'No'}</p>
-        <p><strong>Progress Update:</strong> {project.progress_update || '—'}</p>
+        <ReadLine label="Business" value={project.business} />
+        <ReadLine label="Industry" value={project.industry} />
+        <ReadLine label="Goals" value={project.goals} />
+        <ReadLine label="Pain Points" value={project.painpoints} />
+        <ReadLine label="Pages" value={project.pages} />
+        <ReadLine label="Content" value={project.content} />
+        <ReadLine label="Features" value={project.features} />
+        <ReadLine label="Admin Panel" value={project.admin_panel ? "Yes" : "No"} />
+        <ReadLine label="Design Preferences" value={project.design_prefs} />
+        <ReadLine label="Examples / Competitor Sites" value={project.examples} />
+        <ReadLine label="Mood / Branding" value={project.mood} />
+        <div>
+          <span className="font-semibold text-blue-700 block mb-1">Progress Update:</span>
+          <div className="bg-blue-50 border-l-4 border-blue-400 rounded p-4 text-blue-900 text-base font-medium shadow-inner min-h-[44px]">
+            {project.progress_update?.trim() || <span className="text-gray-400">No updates yet.</span>}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function ReadLine({ label, value }: { label: string; value: string | boolean }) {
+  return (
+    <div>
+      <span className="font-semibold text-gray-600">{label}:</span>{" "}
+      <span className="text-gray-800">{value?.toString().trim() || <span className="text-gray-400">—</span>}</span>
     </div>
   );
 }
