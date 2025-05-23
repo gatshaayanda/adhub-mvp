@@ -83,7 +83,7 @@ export default function Home() {
           {[
             {
               title: "Design & Build",
-              body: "Modern, performant sites & PWAs built with Next.js.",
+              body: "Modern, performance sites & PWAs built with Next.js.",
             },
             {
               title: "Care Plans",
@@ -120,13 +120,13 @@ export default function Home() {
         <div className="max-w-xl mx-auto px-6 text-center">
           <h2 className="text-2xl font-bold mb-4">Ready to chat?</h2>
           <p className="text-[#4F5F7A] mb-8">
-            Drop your details and we’ll send a quick questionnaire to kick-off.
+            We’re currently focusing on selected active client projects. To work with AdminHub in the future, please check back soon.
           </p>
           <a
-            href="mailto:hello@adminhub.co.bw"
+       
             className="inline-block bg-[#0B1A33] text-white rounded-full px-7 py-3 font-semibold hover:opacity-90 transition"
           >
-            Email Us
+            The chance to be a selected client is not available
           </a>
         </div>
       </section>
