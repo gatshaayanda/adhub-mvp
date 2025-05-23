@@ -2,60 +2,59 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase/client';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import AdminHubLoader from '@/components/AdminHubLoader';
 
+// ‼️ tell Next *never* to prerender this page
+export const dynamic = 'force-dynamic';
+
 export default function CallbackPage() {
-  const router      = useRouter();
+  const supabase = createClientComponentClient();
+  const router = useRouter();
   const [error, setError] = useState('');
 
   useEffect(() => {
-    /* 1️⃣  Grab the ?code= from the URL – no React hook needed   */
-    const code = new URLSearchParams(window.location.search).get('code');
+    const run = async () => {
+      // 1.  Exchange the ?code=… in the URL for a session cookie
+      const { error: exchangeErr } = await supabase
+        .auth
+        .exchangeCodeForSession(window.location.href);
 
-    const handleRedirect = async () => {
-      /* 2️⃣  First-time visit: exchange code → session cookie     */
-      if (code) {
-        const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
-        if (exErr) {
-          setError('Authentication failed.');
-          return;
-        }
-      }
-
-      /* 3️⃣  Get session and role                                */
-      const { data: { session }, error: sErr } = await supabase.auth.getSession();
-      if (sErr || !session) {
+      if (exchangeErr) {
         setError('Authentication failed.');
         return;
       }
 
-      const { data: profile, error: pErr } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-
-      if (pErr || !profile) {
-        setError('Failed to fetch profile.');
+      // 2.  Now we really have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('No session found.');
         return;
       }
 
-      /* 4️⃣  Route                                                */
-      if (profile.role === 'Admin') {
-        router.push('/admin/dashboard');
-      } else if (profile.role === 'Client') {
-        router.push('/client/dashboard');
-      } else {
-        setError('No valid role found.');
+      // 3.  Look up the user’s role in `profiles`
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('auth_id', session.user.id)   // column name in your table
+        .single();
+
+      if (profileErr || !profile) {
+        setError('Profile/role missing.');
+        return;
       }
+
+      // 4.  Redirect by role
+      router.replace(
+        profile.role === 'Admin' ? '/admin/dashboard' : '/client/dashboard'
+      );
     };
 
-    handleRedirect();
-  }, [router]);
+    run();
+  }, [router, supabase]);
 
   if (error) {
-    return <p className="text-red-500 text-center mt-10">{error}</p>;
+    return <p className="text-center mt-10 text-red-500">{error}</p>;
   }
 
   return <AdminHubLoader />;
