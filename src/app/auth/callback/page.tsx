@@ -1,22 +1,20 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import AdminHubLoader from '@/components/AdminHubLoader';
 
 export default function CallbackPage() {
-  const router       = useRouter();
-  const params       = useSearchParams();          // ?code=…
+  const router      = useRouter();
   const [error, setError] = useState('');
 
   useEffect(() => {
+    /* 1️⃣  Grab the ?code= from the URL – no React hook needed   */
+    const code = new URLSearchParams(window.location.search).get('code');
+
     const handleRedirect = async () => {
-      /* 1️⃣  If the magic-link delivered a PKCE code, exchange it first. */
-      const code = params.get('code');
+      /* 2️⃣  First-time visit: exchange code → session cookie     */
       if (code) {
         const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
         if (exErr) {
@@ -25,44 +23,36 @@ export default function CallbackPage() {
         }
       }
 
-      /* 2️⃣  Now the cookie exists (or the user was already logged in)   */
-      const {
-        data: { session },
-        error: sessionErr,
-      } = await supabase.auth.getSession();
-
-      if (sessionErr || !session) {
+      /* 3️⃣  Get session and role                                */
+      const { data: { session }, error: sErr } = await supabase.auth.getSession();
+      if (sErr || !session) {
         setError('Authentication failed.');
         return;
       }
 
-      /* 3️⃣  Look up the user’s role in the profiles table               */
-      const { data: profile, error: profileErr } = await supabase
+      const { data: profile, error: pErr } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
         .single();
 
-      if (profileErr || !profile) {
+      if (pErr || !profile) {
         setError('Failed to fetch profile.');
         return;
       }
 
-      /* 4️⃣  Route them to the right dashboard                           */
-      switch (profile.role) {
-        case 'Admin':
-          router.push('/admin/dashboard');
-          break;
-        case 'Client':
-          router.push('/client/dashboard');
-          break;
-        default:
-          setError('No valid role found.');
+      /* 4️⃣  Route                                                */
+      if (profile.role === 'Admin') {
+        router.push('/admin/dashboard');
+      } else if (profile.role === 'Client') {
+        router.push('/client/dashboard');
+      } else {
+        setError('No valid role found.');
       }
     };
 
     handleRedirect();
-  }, [router, params]);
+  }, [router]);
 
   if (error) {
     return <p className="text-red-500 text-center mt-10">{error}</p>;
