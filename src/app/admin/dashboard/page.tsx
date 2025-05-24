@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { ClipboardList, PlusCircle, LogOut, Eye, Pencil } from 'lucide-react';
 import AdminHubLoader from '@/components/AdminHubLoader';
 
-
 interface Project {
   id: string;
   client_name: string;
@@ -21,6 +20,9 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [result, setResult] = useState('');
+  const [sending, setSending] = useState(false);
+  const [selected, setSelected] = useState<number>(0); // Index in projects array
   const router = useRouter();
 
   useEffect(() => {
@@ -35,7 +37,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      // NEWEST PROJECTS FIRST, guaranteed to work
       const { data, error: fetchError } = await supabase
         .from('projects')
         .select('*')
@@ -58,10 +59,36 @@ export default function AdminDashboard() {
     router.push('/login');
   };
 
-  if (loading)
-    return <AdminHubLoader />;
-  if (error)
-    return <p className="text-center mt-10 text-red-500">{error}</p>;
+  // Send Supabase magic link to client
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    setResult('');
+    const { client_email } = projects[selected];
+
+    // Detect local/prod
+    const redirectTo =
+      typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/auth/callback'
+        : 'https://adminhub.vercel.app/auth/callback';
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: client_email,
+      options: {
+        emailRedirectTo: redirectTo,
+      }
+    });
+
+    if (error) {
+      setResult('❌ Error: ' + error.message);
+    } else {
+      setResult('✅ Magic link sent! Client should check their email (inbox/spam).');
+    }
+    setSending(false);
+  };
+
+  if (loading) return <AdminHubLoader />;
+  if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
   return (
     <div className="max-w-5xl mx-auto mt-12 px-4">
@@ -87,6 +114,34 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Magic Link Sender */}
+      {projects.length > 0 && (
+        <form onSubmit={handleSendMagicLink} className="flex items-center gap-3 mb-8">
+          <select
+            className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+            value={selected}
+            onChange={e => setSelected(Number(e.target.value))}
+          >
+            {projects.map((proj, idx) => (
+              <option key={proj.id} value={idx}>
+                {proj.client_name} ({proj.client_email})
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={sending}
+            className="bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-2 rounded-xl font-semibold disabled:opacity-60"
+          >
+            {sending ? "Sending..." : "Send Magic Link"}
+          </button>
+          {result && (
+            <span className="ml-2 text-sm">{result}</span>
+          )}
+        </form>
+      )}
+
+      {/* Projects */}
       {projects.length === 0 ? (
         <div className="mt-16 text-center text-gray-600 text-lg">
           <ClipboardList className="w-12 h-12 mx-auto mb-3 text-blue-200" />

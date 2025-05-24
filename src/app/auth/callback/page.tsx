@@ -23,6 +23,7 @@ export default function CallbackPage() {
 
       const userId = session.user.id;
 
+      // The profile "id" column should match user.id from Supabase Auth
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
@@ -34,7 +35,7 @@ export default function CallbackPage() {
         return;
       }
 
-      // ✅ Redirect based on role
+      // Redirect based on role
       if (profile.role === 'Admin') {
         router.push('/admin/dashboard');
       } else if (profile.role === 'Client') {
@@ -51,5 +52,5 @@ export default function CallbackPage() {
     return <p className="text-red-500 text-center mt-10">{error}</p>;
   }
 
-   return <AdminHubLoader />;
+  return <AdminHubLoader />;
 }
